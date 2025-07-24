@@ -7,9 +7,14 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# MongoDB Atlas connection (you should use environment variables)
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://rashmithakeshireddy:Renuka232006@mongodb.sn6rje7.mongodb.net/?retryWrites=true&w=majority&tls=true&tlsAllowInvalidCertificates=true")
-client = MongoClient(MONGO_URI)
+# MongoDB Atlas connection
+MONGO_URI = os.environ.get(
+    "MONGO_URI",
+    "mongodb+srv://rashmithakeshireddy:Renuka232006@mongodb.sn6rje7.mongodb.net/"
+)
+
+# Fix TLS issue on Render
+client = MongoClient(MONGO_URI, tls=True, tlsAllowInvalidCertificates=True)
 db = client["userdb"]
 collection = db["users"]
 
@@ -23,9 +28,12 @@ def serialize_user(user):
 
 @app.route('/get_data', methods=['GET'])
 def get_data():
-    users = list(collection.find())
-    users = [serialize_user(user) for user in users]
-    return jsonify(users), 200
+    try:
+        users = list(collection.find())
+        users = [serialize_user(user) for user in users]
+        return jsonify(users), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/add_data', methods=['POST'])
 def add_data():
@@ -67,3 +75,4 @@ def delete_data(user_id):
 # Entry point for Render
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+
