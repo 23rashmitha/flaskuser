@@ -10,11 +10,12 @@ CORS(app)
 # MongoDB Atlas connection
 MONGO_URI = os.environ.get(
     "MONGO_URI",
-    "mongodb+srv://rashmithakeshireddy:Renuka232006@mongodb.sn6rje7.mongodb.net/"
+    "mongodb+srv://rashmithakeshireddy:Renuka232006@mongodb.sn6rje7.mongodb.net/userdb?retryWrites=true&w=majority"
 )
 
-# Fix TLS issue on Render
-client = MongoClient(MONGO_URI, tls=True, tlsAllowInvalidCertificates=True)
+# Connect with TLS (SSL)
+client = MongoClient(MONGO_URI, tls=True)
+
 db = client["userdb"]
 collection = db["users"]
 
@@ -40,11 +41,14 @@ def add_data():
     user = request.get_json()
     if not user.get("name") or not user.get("email"):
         return jsonify({"message": "Name and Email are required"}), 400
-    result = collection.insert_one(user)
-    return jsonify({
-        "message": "User added successfully",
-        "id": str(result.inserted_id)
-    }), 201
+    try:
+        result = collection.insert_one(user)
+        return jsonify({
+            "message": "User added successfully",
+            "id": str(result.inserted_id)
+        }), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/update_data/<string:user_id>', methods=['PUT'])
 def update_data(user_id):
@@ -75,4 +79,3 @@ def delete_data(user_id):
 # Entry point for Render
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
-
