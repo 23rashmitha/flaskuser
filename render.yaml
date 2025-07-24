@@ -7,4 +7,4 @@ services:
     startCommand: gunicorn app:app
     envVars:
       - key: MONGO_URI
-        value: "mongodb+srv://rashmithakeshireddy:Renuka232006@mongodb.sn6rje7.mongodb.net/"
+        value: "mongodb+srv://rashmithakeshireddy:Renuka232006@mongodb.sn6rje7.mongodb.net/userdb?retryWrites=true&w=majority"
