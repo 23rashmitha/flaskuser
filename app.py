@@ -27,7 +27,7 @@ def serialize_user(user):
         "email": user.get("email", "")
     }
 
-@app.route('/get_data', methods=['GET'])
+@app.route('/', methods=['GET'])
 def get_data():
     try:
         users = list(collection.find())
