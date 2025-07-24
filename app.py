@@ -2,16 +2,18 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
 from bson import ObjectId
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-# Connect to local MongoDB instance
-client = MongoClient("mongodb+srv://rashmithakeshireddy:Renuka232006@mongodb.sn6rje7.mongodb.net/")
+# MongoDB Atlas connection (you should use environment variables)
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://rashmithakeshireddy:Renuka232006@mongodb.sn6rje7.mongodb.net/")
+client = MongoClient(MONGO_URI)
 db = client["userdb"]
 collection = db["users"]
 
-# Helper: Convert MongoDB ObjectId to string without modifying original
+# Helper: Convert MongoDB ObjectId to string
 def serialize_user(user):
     return {
         "_id": str(user["_id"]),
@@ -19,33 +21,28 @@ def serialize_user(user):
         "email": user.get("email", "")
     }
 
-# Route: Get all users
 @app.route('/get_data', methods=['GET'])
 def get_data():
     users = list(collection.find())
     users = [serialize_user(user) for user in users]
     return jsonify(users), 200
 
-# Route: Add a new user
 @app.route('/add_data', methods=['POST'])
 def add_data():
     user = request.get_json()
     if not user.get("name") or not user.get("email"):
         return jsonify({"message": "Name and Email are required"}), 400
-
     result = collection.insert_one(user)
     return jsonify({
         "message": "User added successfully",
         "id": str(result.inserted_id)
     }), 201
 
-# Route: Update user by ID
 @app.route('/update_data/<string:user_id>', methods=['PUT'])
 def update_data(user_id):
     updated_user = request.get_json()
     if not updated_user.get("name") or not updated_user.get("email"):
         return jsonify({"message": "Name and Email are required"}), 400
-
     try:
         result = collection.update_one(
             {"_id": ObjectId(user_id)},
@@ -57,7 +54,6 @@ def update_data(user_id):
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 400
 
-# Route: Delete user by ID
 @app.route('/delete_data/<string:user_id>', methods=['DELETE'])
 def delete_data(user_id):
     try:
@@ -68,7 +64,6 @@ def delete_data(user_id):
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 400
 
-# Run the Flask app
+# Entry point for Render
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
-
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
