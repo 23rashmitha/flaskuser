@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: flask-mongodb-app
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: gunicorn app:app
+    envVars:
+      - key: MONGO_URI
+        value: "mongodb+srv://rashmithakeshireddy:Renuka232006@mongodb.sn6rje7.mongodb.net/"
